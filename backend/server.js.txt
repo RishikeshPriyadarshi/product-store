@@ -1,0 +1,37 @@
+import express from 'express';
+import dotenv from 'dotenv';
+import { connectDB } from './config/db.js'; // Import the DB connection
+import Product from './models/product.js'; // Import the Product model
+
+dotenv.config();
+
+const app = express();
+
+// Middleware to parse JSON
+app.use(express.json()); // Allows parsing of JSON data in request body
+
+// Route to create a new product
+app.post("/api/products", async (req, res) => {
+  const product = req.body;
+
+  // Check if all required fields are provided
+  if (!product.name || !product.price || !product.image) {
+    return res.status(400).json({ success: false, message: "Please provide all fields" });
+  }
+
+  try {
+    // Create a new product and save to the database
+    const newProduct = new Product(product);
+    await newProduct.save();
+    res.status(201).json({ success: true, data: newProduct }); // Respond with created product
+  } catch (error) {
+    console.error("Error in create product:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+});
+
+// Start the server
+app.listen(5000, () => {
+  connectDB(); // Establish database connection
+  console.log("Server started at http://localhost:5000");
+});
